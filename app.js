@@ -2,7 +2,7 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const PORT = process.env.PORT || 3000;
 const app = express();
-const { UserList } = require("./modules/users1");
+const { UserList } = require("./modules/users");
 
 userlist = new UserList();
 
