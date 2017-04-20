@@ -10,9 +10,9 @@ function validation(req, res, next) {
         throw {
             error: {
                 code: -32601,
-                message:`method not found (${req.body.method})`,
+                message:`method not supported (${req.body.method})`,
             },
-            name:'method not found',
+            name:'method not supported',
             id:req.body.id
         };
     }
@@ -32,7 +32,7 @@ app.post("/rpc", validation, (req, res) => {
 app.all('*', (req, res) => {
     res.status(400).send(JSON.stringify({
         jsonrpc: '2.0',
-        error: {code: -32601, message:'incorrect request'}
+        error: {code: -32601, message:'Incorrect request'}
     }));
 });
 

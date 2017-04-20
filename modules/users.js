@@ -32,7 +32,7 @@ class UserList extends Array {
     }
 
     show() {
-        console.log(`[ number of users in list: ${this.length} ]:`);
+        console.log(`Number of users in list: ${this.length} :`);
         this.forEach(ob => ob.show());
     }
 
