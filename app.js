@@ -1,61 +1,74 @@
-var express = require('express');
-var path = require('path'); // модуль для парсинга пути
-var favicon = require('serve-favicon');
-var logger = require('morgan');
-var cookieParser = require('cookie-parser');
-var bodyParser = require('body-parser');
+const express = require("express");
+const bodyParser = require("body-parser");
+const PORT = process.env.PORT || 3000;
+const app = express();
+const { UserList } = require("./modules/users1");
 
-var index = require('./routes/index');
-var users = require('./routes/users');
+userlist = new UserList();
 
-var REST = require('./routes/rest');
-var RPC = require('./routes/rpc');
+function userNoExist(id) {
+    return `User with id:${id} does not exist`;
+}
 
-var app = express();
+function result(id, p) {
+    return `id:${id}, ` + ((p) ? 'OK' : 'User does not exist');
+}
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
-
-// uncomment after placing your favicon in /public
-//app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
-app.use(logger('dev')); // выводим все запросы со статусами в консоль
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(bodyParser.urlencoded({"extended": true}));
 
-app.use('/', index);
-app.use('/users', users);
-app.use('/rest', REST);
-app.use('/rpc', RPC);
-
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  var err = new Error('Not Found');
-  err.status = 404;
-  next(err);
+app.get('/users', (req, res) => {
+    res.json(userlist);
+    console.log('userlist:', userlist.json());
 });
 
-// error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
+app.get('/users/:id', (req, res) => {
+    const p = userlist.get(req.params.id);
+    if (p) {
+        res.send(p);
+    } else {
+        res.json({error: userNoExist(req.params.id)});
+    }
+    console.log('requested:', result(req.params.id, p));
 });
 
-
-app.get('/', function (req, res) {
-  res.send('Hello World!');
+app.put('/users/:id', (req, res) => {
+    const p = userlist.update(req.params.id, {name:req.body.name, score:req.body.score});
+    if (p) {
+        res.json({done: true});
+    } else {
+        res.json({error: userNoExist(req.params.id)});
+    }
+    console.log('changed:', result(req.params.id, p));
 });
 
-app.listen(3000, function () {
-  console.log('Example app listening on port 3000!');
+app.delete('/users/:id', (req, res) => {
+    const p = userlist.del(req.params.id);
+    if (p) {
+        res.json({done: true, message: `user with id:${req.params.id} has been deleted`});
+    } else {
+        res.json({error: userNoExist(req.params.id)});
+    }
+    console.log('deleted:', result(req.params.id, p));
 });
 
+app.post('/users', (req, res) => {
+    const user = userlist.add(name=req.body.name, score=req.body.score);
+    res.json(user);
+    console.log('added:', user.json());
+});
+
+app.all('*', (req, res) => {
+    res.status(400).send('incorrect request');
+});
+
+app.use((err, req, res, next) => {
+    console.log(err);
+    res.json(err);
+});
+
+app.listen(3000, () => {
+  console.log(`Server is up and running on port 3000`);
+});
 
 module.exports = app;
